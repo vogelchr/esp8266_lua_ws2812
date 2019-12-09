@@ -60,20 +60,11 @@ dp_x = 0.01
 phase_y = 0.0
 dp_y = 0.011
 
-dump = false
+running = true
 
 led_tick = function()
-    -- print(angle_hs, c, s)
-
     xctr = sin(phase_x)
     yctr = sin(phase_y)
-
-    if dump == true then
-        print(xctr, yctr)
-    end
-
---    min_r = nil
---    min_j = nil
 
     for row=0,7,1 do
         x = row*0.28571 - 1
@@ -85,10 +76,6 @@ led_tick = function()
 
             gr, re, bl = color_utils.hsv2grb(hue, 255, val)
 
-            if dump == true then
-                print(x, y, r, val, hue)
-            end
-
             -- row/col 0..7 to index 1..N
             -- zigzag order for 8x8 LED panel
             if (row % 2) == 1 then
@@ -98,15 +85,8 @@ led_tick = function()
             end
             buf:set(j, re, gr, bl)
 
---            if min_r == nil or min_r > r then
---                min_r = r
---                min_j = j
---            end
         end
     end
-
---    gr, re, bl = color_utils.hsv2grb(hue, 255, 40)
---    buf:set(min_j, re, gr, bl)
 
     ws2812.write(buf)
 
@@ -118,9 +98,32 @@ led_tick = function()
         hue = 0
     end
 
-    dump = false
-    led_timer:start() -- restart
+    if running then
+        led_timer:start() -- restart
+    end
 end
 
 led_timer:register(25, tmr.ALARM_SEMI, led_tick)
 led_timer:start()
+
+udp_receive_event = function(socket, data, port, ipaddr)
+    if running then
+        print("UDP from " .. ipaddr .. ":" .. port .. ". Stop animation.")
+        running = false
+    end
+
+    need_bytes = 3*buf:size()
+
+    if data:len() == need_bytes then
+        buf:replace(data)
+        ws2812.write(buf)
+    else
+        print("Wrong UDP size, need " .. need_bytes .. " bytes.")
+        running = true
+        led_timer:start()
+    end
+end
+
+udp = net.createUDPSocket()
+udp:listen(5000)
+udp:on("receive", udp_receive_event)

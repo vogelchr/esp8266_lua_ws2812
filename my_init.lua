@@ -20,6 +20,20 @@ wifi_disconnect_event = function(T)
     end
 end
 
+tcp_recv_event = function(socket, data)
+  print(data)
+  socket:send("Received.\r\n")
+end
+
+tcp_accept_event = function(conn)
+  conn:on("receive", tcp_recv_event)
+  conn:send("Hello.\r\n")
+end
+
+tcpsv = net.createServer(net.TCP, 5) -- 5s timeout
+tcpsv:listen(1234, tcp_accept_event)
+
+
 -- Register WiFi Station event callbacks
 wifi.eventmon.register(wifi.eventmon.STA_CONNECTED, wifi_connect_event)
 wifi.eventmon.register(wifi.eventmon.STA_GOT_IP, wifi_got_ip_event)
