@@ -1,5 +1,3 @@
--- load credentials, 'SSID' and 'PASSWORD' declared and initialize in there
-dofile("credentials.lua")
 
 -- Define WiFi station event callbacks 
 wifi_connect_event = function(T)
@@ -28,9 +26,7 @@ wifi.eventmon.register(wifi.eventmon.STA_GOT_IP, wifi_got_ip_event)
 wifi.eventmon.register(wifi.eventmon.STA_DISCONNECTED, wifi_disconnect_event)
 
 print("** Starting WiFi.")
+dofile("credentials.lc") -- wifi_ssid, wifi_psk
 wifi.setmode(wifi.STATION)
-wifi.sta.config({ssid=wifi_ssid, pwd=wifi_psk})
--- wifi.sta.connect() not necessary because config() uses auto-connect=true by default
-
--- will be compiled
+wifi.sta.config({ssid=wifi_ssid, pwd=wifi_psk}) -- config will auto-connect
 dofile("application.lc")
