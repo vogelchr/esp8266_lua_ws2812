@@ -6,11 +6,7 @@ led_sat = 250
 led_val_angle = 0
 led_val_angle_inc = 3.25
 
-gpio.mode(0, gpio.OUTPUT) -- 0=GPIO16=user LED
-
 led_tick = function()
-    gpio.write(0, gpio.LOW) -- 0=GPIO16=user LED, LOW=on
-
     local a, da = led_val_angle, 720.0 / led_buf:size() -- two cycles / led strip
 
     local sat, bright = led_sat, led_bright
@@ -26,7 +22,6 @@ led_tick = function()
         end
 
         led_buf:set(i, r, g, b)
-        gpio.write(0, gpio.HIGH) -- 0=GPIO16=user LED, HIGH=off
     end
     ws2812.write(led_buf)
 
