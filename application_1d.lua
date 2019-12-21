@@ -6,6 +6,8 @@ led_sat = 250
 led_val_angle = 0
 led_val_angle_inc = 3.25
 
+running = true
+
 led_tick = function()
     local a, da = led_val_angle, 720.0 / led_buf:size() -- two cycles / led strip
 
@@ -30,7 +32,9 @@ led_tick = function()
         led_val_angle = led_val_angle - 360
     end
 
-    led_timer:start() -- restart
+    if running then
+        led_timer:start() -- restart
+    end
 end
 
 ledapp_init = function(nled)
@@ -52,5 +56,26 @@ ledapp_init = function(nled)
     led_timer:start()
 end
 
+udp_receive_event = function(socket, data, port, ipaddr)
+    if running then
+        print("UDP from " .. ipaddr .. ":" .. port .. ". Stop animation.")
+        running = false
+    end
 
-ledapp_init(280);
+    need_bytes = 3*led_buf:size()
+
+    if data:len() == need_bytes then
+        led_buf:replace(data)
+        ws2812.write(led_buf)
+    else
+        print("Wrong UDP size, need " .. need_bytes .. " bytes.")
+        running = true
+        led_timer:start()
+    end
+end
+
+udp = net.createUDPSocket()
+udp:listen(5000)
+udp:on("receive", udp_receive_event)
+
+ledapp_init(294);
